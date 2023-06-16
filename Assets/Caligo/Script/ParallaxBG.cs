@@ -5,7 +5,7 @@ using UnityEngine;
 public class ParallaxBG : MonoBehaviour
 {
 
-    float depth = 8;
+    float depth = 4;
 
     Lucio lucio;
 
@@ -30,8 +30,8 @@ public class ParallaxBG : MonoBehaviour
 
         pos.x -= realVelocity * Time.fixedDeltaTime;
 
-        if (pos.x <= -25)
-            pos.x = 20;
+        if (pos.x <= -55)
+            pos.x = 40;
 
         transform.position = pos;
     }

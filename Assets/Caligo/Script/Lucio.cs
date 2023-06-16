@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Lucio : MonoBehaviour
@@ -8,55 +9,69 @@ public class Lucio : MonoBehaviour
     public float gravity;
     public Vector2 velocity;
     public float maxXVelocity = 100;
-    public float maxAcceleration = 10;
+    public float maxAcceleration = 5;
     public float acceleration = 10;
     public float distance = 0;
-    public float jumpVelocity = 30;
+    public float jumpVelocity = 50;
     public float groundHeight = 10;
     public bool isGrounded = true;
 
     public bool isHoldingjump = false;
-    public float maxHoldJumpTime = 0.5f;
+    public float maxHoldJumpTime = 0.4f;
+    public float maxMaxHoldJumpTime = 0.4f;
     public float holdJumpTimer = 0.0f;
 
     public float jumpGroundThreshold = 1;
 
+    Rigidbody2D rb;
+
+    public bool isDead = false;
 
 
     void Start()
     {
-   
+
     }
 
     void Update()
-    {   
+    {
         Vector2 pos = transform.position;
         float groundDistance = Mathf.Abs(pos.y - groundHeight);
-        if (isGrounded|| groundDistance <=jumpGroundThreshold)
+        if (isGrounded || groundDistance <= jumpGroundThreshold)
         {
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (Input.GetKeyDown(KeyCode.Space) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
             {
                 isGrounded = false;
                 velocity.y = jumpVelocity;
                 isHoldingjump = true;
                 holdJumpTimer = 0;
-
+                
             }
         }
 
-        if (Input.GetKeyUp(KeyCode.Space)) 
+        if (Input.GetKeyUp(KeyCode.Space) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Stationary))
         {
             isHoldingjump = false;
         }
     }
 
-    private void FixedUpdate() 
+    private void FixedUpdate()
     {
         Vector2 pos = transform.position;
 
-        if (!isGrounded) 
+        if (isDead)
         {
-            if (isHoldingjump) 
+            return;
+        }
+
+        if (pos.y < -20)
+        {
+            isDead = true;
+        }
+
+        if (!isGrounded)
+        {
+            if (isHoldingjump)
             {
                 holdJumpTimer += Time.fixedDeltaTime;
                 if (holdJumpTimer >= maxHoldJumpTime)
@@ -77,28 +92,49 @@ public class Lucio : MonoBehaviour
             RaycastHit2D hit2D = Physics2D.Raycast(rayOrigin, rayDirection, rayDistance);
             if (hit2D.collider != null)
             {
-                ParallaxGround ground = hit2D.collider.GetComponent<ParallaxGround>();
-                if (ground != null) 
+                PGround ground = hit2D.collider.GetComponent<PGround>();
+                if (ground != null)
                 {
-                    pos.y = groundHeight;
-                    isGrounded = true;
+                    if (pos.y >= ground.groundHeight)
+                    {
+                        groundHeight = ground.groundHeight;
+                        pos.y = groundHeight;
+                        velocity.y = 0;
+                        isGrounded = true;
+                    }
                 }
             }
             Debug.DrawRay(rayOrigin, rayDirection * rayDistance, Color.red);
+
+
+            Vector2 wallOrigin = new Vector2(pos.x, pos.y);
+            RaycastHit2D wallHit = Physics2D.Raycast(wallOrigin, Vector2.right, velocity.x * Time.fixedDeltaTime);
+            if (wallHit.collider != null)
+            {
+                PGround ground = wallHit.collider.GetComponent<PGround>();
+                if (ground != null)
+                {
+                    if (pos.y < ground.groundHeight)
+                    {
+                        velocity.x = 0;
+                    }
+                }
+            }
         }
 
 
         distance += velocity.x * Time.fixedDeltaTime;
-        
-        if(isGrounded) 
+
+        if (isGrounded)
         {
             float velocityRatio = velocity.x / maxXVelocity;
-            acceleration = maxAcceleration * ( 1 - velocityRatio );
+            acceleration = maxAcceleration * (0.5f - velocityRatio);
+            maxHoldJumpTime = maxMaxHoldJumpTime * velocityRatio;
 
             velocity.x += acceleration * Time.fixedDeltaTime;
-            if(velocity.x >= maxXVelocity) 
+            if (velocity.x >= maxXVelocity)
             {
-               velocity.x = maxXVelocity;
+                velocity.x = maxXVelocity;
             }
 
 
@@ -118,12 +154,35 @@ public class Lucio : MonoBehaviour
 
 
         }
-        
+        Vector2 obstOrigin = new Vector2(pos.x, pos.y);
+        RaycastHit2D obstHitX = Physics2D.Raycast(obstOrigin, Vector2.right, velocity.x * Time.fixedDeltaTime);
+        if (obstHitX.collider != null)
+        {
+            Obstacles obstacles = obstHitX.collider.GetComponent<Obstacles>();
+            if (obstacles != null)
+            {
+                hitObstacle(obstacles);
+            }
+        }
 
-            
-        
-        
+
+        RaycastHit2D obstHitY = Physics2D.Raycast(obstOrigin, Vector2.up, velocity.y * Time.fixedDeltaTime);
+        if (obstHitY.collider != null)
+        {
+            Obstacles obstacles = obstHitY.collider.GetComponent<Obstacles>();
+            if (obstacles != null)
+            {
+                hitObstacle(obstacles);
+            }
+        }
+
+        void hitObstacle(Obstacles obstacles)
+        {
+            Destroy(obstacles.gameObject);
+            velocity.x *= 0.7f;
+        }
+
         transform.position = pos;
-    }    
+    }
 
 }

@@ -6,8 +6,14 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 2cda990e2423bbf4892e6590ba056729
+    path: Assets/Caligo/Levels/Main Menu.unity
+    guid: 16b7f63fdec049b4798695775298d048
+  - enabled: 1
+    path: Assets/Caligo/Levels/Credits.unity
+    guid: 36a4892a5c489884795bbc2e6f80e9d1
+  - enabled: 1
+    path: Assets/Caligo/Levels/Game.unity
+    guid: 2ac01bdbc4f205d41a97b45e4bc66cdf
   m_configObjects:
     com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: a916a15e0bf7c6d4bb2b024820e5c59c, type: 2}
     com.unity.adaptiveperformance.samsung.android.provider_settings: {fileID: 11400000, guid: 4584da58e0990494ba85cd4a310214c9, type: 2}
